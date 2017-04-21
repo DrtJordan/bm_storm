@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -23,10 +24,10 @@ import com.yuhe.american.db.statics.HistoryOnlineDB;
 public class HistoryOnline extends AbstractStaticsModule {
 	// 记录当天服的人数信息：最高在线，最低在线，总在线人数
 	// 数据格式：<HostID, <date, <Type, Number>>>
-	private Map<String, Map<String, Map<String, Integer>>> StaticsNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
+	private static Map<String, Map<String, Map<String, Integer>>> StaticsNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
 
 	@Override
-	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Set<String> flagSet = new HashSet<String>(); // 标志位，用来记录到底哪些hostid哪些date需要更新
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
@@ -106,8 +107,9 @@ public class HistoryOnline extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time <= '" + date + " 23:59:59'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				int onlineNum = resultSet.getInt("OnlineNum");
 				int maxOnline = dateResult.get("MaxOnline");
@@ -122,6 +124,8 @@ public class HistoryOnline extends AbstractStaticsModule {
 				dateResult.put("MinOnline", minOnline);
 				dateResult.put("TotalOnline", totalOnline);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -153,8 +157,8 @@ public class HistoryOnline extends AbstractStaticsModule {
 	}
 
 	@Override
-	public boolean cronExecute() {
-		synchronized (StaticsNumMap) {
+	public synchronized boolean cronExecute() {
+//		synchronized (StaticsNumMap) {
 			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
 			Map<String, String> hostMap = ServerDB.getStaticsServers();
 			Iterator<String> hIt = hostMap.keySet().iterator();
@@ -179,7 +183,7 @@ public class HistoryOnline extends AbstractStaticsModule {
 					HistoryOnlineDB.batchInsert(platformID, hostID, today, maxOnline, aveNum, minOnline);
 				}
 			}
-		}
+//		}
 		return true;
 	}
 

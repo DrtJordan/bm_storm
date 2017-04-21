@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,10 +27,10 @@ import com.yuhe.american.db.statics.LoginStaticsDB;
 public class LoginStatics extends AbstractStaticsModule {
 	private static final int STANDARD_ID = 5; // 标准ID，如果不在这个步骤里面的不用统计
 	// 记录当天登陆过程的玩家uid，不在这里面的不予统计，另外时间过了还需要及时清空,格式:<HostID, <date, <Uids>>>
-	private Map<String, Map<String, Set<String>>> StandardUids = new HashMap<String, Map<String, Set<String>>>();
+	private static Map<String, Map<String, Set<String>>> StandardUids = new HashMap<String, Map<String, Set<String>>>();
 	// 记录需要入库的统计结果，入库完毕后这些统计结果会被清空，格式：// 记录格式<platformID, HostID,<Date, <Hour,
 	// <Step, StepNum>>>>>
-	private Map<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>> PlatformStatics = new HashMap<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>>();
+	private static Map<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>> PlatformStatics = new HashMap<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>>();
 
 	@Override
 	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
@@ -132,12 +133,15 @@ public class LoginStatics extends AbstractStaticsModule {
 		options.add("Time <= '" + date + " 23:59:59'");
 		options.add("Step = '" + STANDARD_ID + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String uid = resultSet.getString("Uid");
 				uids.add(uid);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

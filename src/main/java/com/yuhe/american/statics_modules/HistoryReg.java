@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,7 +25,7 @@ import com.yuhe.american.utils.DateUtils2;
 public class HistoryReg extends AbstractStaticsModule {
 	// 记录当天服的注册人数信息：当天注册数，男生注册数，女生注册数，总注册数
 	// 数据格式：<HostID, <date, <Type, Number>>>
-	private Map<String, Map<String, Map<String, Integer>>> StaticsNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
+	private static Map<String, Map<String, Map<String, Integer>>> StaticsNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
 	public static Logger logger = Logger.getLogger(HistoryReg.class);
 	@Override
 	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
@@ -116,8 +117,9 @@ public class HistoryReg extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time < '" + endTime + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				int sex = resultSet.getInt("Sex");
 				if (sex == 1) {
@@ -134,11 +136,13 @@ public class HistoryReg extends AbstractStaticsModule {
 			newOptions.add("HostID = '" + hostID + "'");
 			String yesterday = DateUtils2.getOverDate(date, -1);
 			newOptions.add("Date='" + yesterday + "'");
-			resultSet = CommonDB.query(conn, tblName, newOptions);
+			resultSet = CommonDB.query(smst, conn, tblName, newOptions);
 			while (resultSet.next()) {
 				totalRegNum += resultSet.getInt("TotalRegNum");
 				break;
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

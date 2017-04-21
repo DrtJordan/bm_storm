@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,8 +20,8 @@ import com.yuhe.american.db.statics.PayZoneDB;
 import com.yuhe.american.utils.DateUtils2;
 
 public class PayZone extends AbstractStaticsModule {
-	private Map<String, Map<String, Integer>> HostZoneMap = new HashMap<String, Map<String, Integer>>();
-	private Map<String, String> HostUpdateMap = new HashMap<String, String>();
+	private static Map<String, Map<String, Integer>> HostZoneMap = new HashMap<String, Map<String, Integer>>();
+	private static Map<String, String> HostUpdateMap = new HashMap<String, String>();
 	private static final Map<String, int[]> ZONE_MAP = new HashMap<String, int[]>() {
 		private static final long serialVersionUID = 1L;
 
@@ -41,7 +42,7 @@ public class PayZone extends AbstractStaticsModule {
 	};
 
 	@Override
-	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
 			String platformID = pIt.next();
@@ -112,11 +113,14 @@ public class PayZone extends AbstractStaticsModule {
 		List<String> options = new ArrayList<String>();
 		options.add("Uid = '" + uid + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				totalGold = resultSet.getInt("TotalGold");
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -144,8 +148,9 @@ public class PayZone extends AbstractStaticsModule {
 		options.add("HostID = '" + hostID + "'");
 		options.add("Date = '" + today + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String zoneID = resultSet.getString("ZoneID");
 				int userNum = resultSet.getInt("PayUserNum");
@@ -156,13 +161,15 @@ public class PayZone extends AbstractStaticsModule {
 				String yesterday = DateUtils2.getOverDate(today, -1);
 				options.remove(1);// 删除之前的查询今天的查询条件
 				options.add("Date = '" + yesterday + "'");
-				resultSet = CommonDB.query(conn, tblName, options);
+				resultSet = CommonDB.query(smst, conn, tblName, options);
 				while (resultSet.next()) {
 					String zoneID = resultSet.getString("ZoneID");
 					int userNum = resultSet.getInt("PayUserNum");
 					zoneMap.put(zoneID, userNum);
 				}
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -198,8 +205,8 @@ public class PayZone extends AbstractStaticsModule {
 	}
 
 	@Override
-	public boolean cronExecute() {
-		synchronized (HostUpdateMap) {
+	public synchronized boolean cronExecute() {
+//		synchronized (HostUpdateMap) {
 			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
 			Map<String, String> hostMap = ServerDB.getStaticsServers();
 			Iterator<String> hIt = hostMap.keySet().iterator();
@@ -220,7 +227,7 @@ public class PayZone extends AbstractStaticsModule {
 					PayZoneDB.insert(platformID, hostID, today, zoneMap);
 				}
 			}
-		}
+//		}
 		return true;
 	}
 

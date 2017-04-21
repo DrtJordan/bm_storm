@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -163,8 +164,9 @@ public class VIP extends AbstractStaticsModule {
 		options.add("Time < '" + date + " 23:59:59'");
 		options.add("VipLevel != '0'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String vipLevel = resultSet.getString("VipLevel");
 				int isVip = resultSet.getInt("IsVip");
@@ -183,6 +185,8 @@ public class VIP extends AbstractStaticsModule {
 				Set<String> vipNumUids = levelResult.get("VipNums");
 				vipNumUids.add(uid);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -213,8 +217,10 @@ public class VIP extends AbstractStaticsModule {
 		}
 		String sql = StringUtils.join(sqlList, " union ");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = DBManager.query(conn, sql);
+		
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = DBManager.query(smst, conn, sql);
 			while (resultSet.next()) {
 				String uid = resultSet.getString("Uid");
 				String time = resultSet.getString("Time");
@@ -227,6 +233,8 @@ public class VIP extends AbstractStaticsModule {
 				}
 				dateUids.add(uid);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,10 +27,10 @@ import com.yuhe.american.utils.DateUtils2;
 public class UserPayDay extends AbstractStaticsModule {
 	// 记录当天服的每个人的充值次数
 	// 数据格式：<HostID, <date, <Type, Number>>>
-	private Map<String, Map<String, Map<String, Integer>>> PayNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
+	private static Map<String, Map<String, Map<String, Integer>>> PayNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
 	// 记录当天服的充值频率
 	// 数据格式：<HostID, <Date, <FrequencyType, Number>>>
-	private Map<String, Map<String, Map<String, Integer>>> FrequencyMap = new HashMap<String, Map<String, Map<String, Integer>>>();
+	private static Map<String, Map<String, Map<String, Integer>>> FrequencyMap = new HashMap<String, Map<String, Map<String, Integer>>>();
 	// 充值频率区间
 	private static final Map<String, int[]> ZONE_MAP = new HashMap<String, int[]>() {
 		private static final long serialVersionUID = 1L;
@@ -208,8 +209,9 @@ public class UserPayDay extends AbstractStaticsModule {
 		options.add("HostID = '" + hostID + "'");
 		options.add("Date = '" + date + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String uid = resultSet.getString("Uid");
 				int totalNum = resultSet.getInt("TotalNum");
@@ -217,6 +219,8 @@ public class UserPayDay extends AbstractStaticsModule {
 				String frequencyID = getFrequencyID(totalNum);
 				frequencyStatics.put(frequencyID, frequencyStatics.getOrDefault(frequencyID, 0)+1);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

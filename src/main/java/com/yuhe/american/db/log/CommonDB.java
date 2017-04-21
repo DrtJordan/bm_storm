@@ -2,6 +2,7 @@ package com.yuhe.american.db.log;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -87,18 +88,21 @@ public class CommonDB {
 		DBManager.execute(sb.toString());
 		return true;
 	}
+
 	/**
 	 * 查询数据库返回结果
+	 * @param smst
+	 * @param conn
 	 * @param tblName
 	 * @param options
 	 * @return
 	 */
-	public static ResultSet query(Connection conn, String tblName, List<String> options){
+	public static ResultSet query(Statement smst, Connection conn, String tblName, List<String> options){
 		String sql = "select * from " + tblName + " where 1 = 1 ";
 		if(options.size() > 0){
 			sql += " and " + StringUtils.join(options, " and ");
 		}
-		ResultSet results = DBManager.query(conn, sql);
+		ResultSet results = DBManager.query(smst, conn, sql);
 		return results;
 	}
 }

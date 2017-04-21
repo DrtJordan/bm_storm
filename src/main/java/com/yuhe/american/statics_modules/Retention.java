@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.log4j.Logger;
 import org.apache.storm.shade.org.apache.commons.lang.StringUtils;
 
 import com.yuhe.american.db.DBManager;
@@ -35,10 +37,11 @@ public class Retention extends AbstractStaticsModule {
 	private static Map<String, Map<String, Set<String>>> LoginDayUids = new HashMap<String, Map<String, Set<String>>>();
 	// 记录每次统计周期内的登陆玩家uid，统计完后会清空，数据格式：Map<PlatformID, Map<HostID,
 	// Map<Date,Set<Uid>>>>
-	private Map<String, Map<String, Map<String, Set<String>>>> PeriodLoginUids = new HashMap<String, Map<String, Map<String, Set<String>>>>();
-
+	private static Map<String, Map<String, Map<String, Set<String>>>> PeriodLoginUids = new HashMap<String, Map<String, Map<String, Set<String>>>>();
+	
+	public static Logger logger = Logger.getLogger(Retention.class);
 	@Override
-	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Map<String, Map<String, Map<String, Set<String>>>> platformUids = getLoginUid(platformResults);
 		mergeTodayLoginUids(platformUids);
 		Iterator<String> pIt = platformUids.keySet().iterator();
@@ -174,12 +177,16 @@ public class Retention extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time <= '" + date + " 23:59:59'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
+		
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String uid = resultSet.getString("Uid");
 				uids.add(uid);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -205,12 +212,16 @@ public class Retention extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time <= '" + date + " 23:59:59'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
+		
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String uid = resultSet.getString("Uid");
 				uids.add(uid);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -234,7 +245,9 @@ public class Retention extends AbstractStaticsModule {
 			RegResults.put(hostID, hostRegUids);
 		}
 		Set<String> dateResults = hostRegUids.get(date);
-		if (dateResults == null) {
+		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+		if (dateResults == null || date.equals(today)) {
+			//如果是今天（因为今天的注册数据随时会变）或者之前几天的数据为空则冲数据库中加载
 			dateResults = new HashSet<String>();
 			// 从对应数据库中加载
 			String tblName = platformID + "_log.tblAddPlayerLog_" + date.replace("-", "");
@@ -243,12 +256,15 @@ public class Retention extends AbstractStaticsModule {
 			options.add("Time >= '" + date + " 00:00:00'");
 			options.add("Time <= '" + date + " 23:59:59'");
 			Connection conn = DBManager.getConn();
-			ResultSet resultSet = CommonDB.query(conn, tblName, options);
 			try {
+				Statement smst = conn.createStatement();
+				ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 				while (resultSet.next()) {
 					String uid = resultSet.getString("Uid");
 					dateResults.add(uid);
 				}
+				resultSet.close();
+				smst.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -284,12 +300,15 @@ public class Retention extends AbstractStaticsModule {
 			options.add("FirstCashTime >= '" + date + " 00:00:00'");
 			options.add("FirstCashTime <= '" + date + " 23:59:59'");
 			Connection conn = DBManager.getConn();
-			ResultSet resultSet = CommonDB.query(conn, tblName, options);
 			try {
+				Statement smst = conn.createStatement();
+				ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 				while (resultSet.next()) {
 					String uid = resultSet.getString("Uid");
 					dateResults.add(uid);
 				}
+				resultSet.close();
+				smst.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -318,6 +337,7 @@ public class Retention extends AbstractStaticsModule {
 		Map<String, String> keyValues = new HashMap<String, String>();
 		keyValues.put("NewNum", Integer.toString(regNum));
 		keyValues.put("LoginNum", Integer.toString(loginNum));
+//		logger.info("hostID:"+hostID+"date:"+date+",newNum:"+regNum+",loginNum:"+loginNum);
 		RetentionDB.insertLoginRetention(platformID, hostID, date, keyValues);
 		// 再统计每天的留存率
 		int[] days = { -1, -2, -3, -4, -5, -6, -7, -10, -13, -15, -29, -30 };
@@ -422,8 +442,8 @@ public class Retention extends AbstractStaticsModule {
 	}
 
 	@Override
-	public boolean cronExecute() {
-		synchronized (PeriodLoginUids) {
+	public synchronized boolean cronExecute() {
+//		synchronized (PeriodLoginUids) {
 			Iterator<String> pIt = PeriodLoginUids.keySet().iterator();
 			while (pIt.hasNext()) {
 				String platformID = pIt.next();
@@ -465,7 +485,7 @@ public class Retention extends AbstractStaticsModule {
 			// 清空
 			if (PeriodLoginUids.size() > 0)
 				PeriodLoginUids = new HashMap<String, Map<String, Map<String, Set<String>>>>();
-		}
+//		}
 		return true;
 	}
 

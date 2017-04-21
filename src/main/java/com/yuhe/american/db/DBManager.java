@@ -49,6 +49,7 @@ public class DBManager {
 		Connection conn = null;
 		try {
 			conn = dataSource.getConnection();
+			conn.setAutoCommit(true);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			log.error("获取数据库连接失败：" + e);
@@ -65,7 +66,7 @@ public class DBManager {
 	public static void closeConn(Connection conn) {
 		try {
 			if (conn != null && !conn.isClosed()) {
-				conn.setAutoCommit(true);
+
 				conn.close();
 			}
 		} catch (SQLException e) {
@@ -74,31 +75,35 @@ public class DBManager {
 	}
 
 	/**
-	 * 查询操作，也可以做插入操作
+	 * 查询操作
 	 * 
+	 * @param smst
+	 * @param conn
 	 * @param sql
 	 * @return
 	 */
-	public static ResultSet query(Connection conn, String sql) {
+	public static ResultSet query(Statement smst, Connection conn, String sql) {
 		ResultSet rs = null;
 		try {
-			Statement smst = conn.createStatement();
 			rs = smst.executeQuery(sql);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return rs;
 	}
-
+	/**
+	 * 执行sql语句，一般为更新或者插入操作
+	 * @param sql
+	 * @return
+	 */
 	public static boolean execute(String sql) {
 		Connection conn = getConn();
 		boolean flag = false;
 		try {
 			Statement smst = conn.createStatement();
 			smst.executeUpdate(sql);
-
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

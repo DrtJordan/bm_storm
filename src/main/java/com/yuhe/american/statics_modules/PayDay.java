@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,10 +31,10 @@ import com.yuhe.american.utils.DateUtils2;
 public class PayDay extends AbstractStaticsModule {
 	// 记录昨天和今天的充值总额和充值钻石数量
 	// 格式：<HostID, <Date, <StaticsType, Number>>>
-	private Map<String, Map<String, Map<String, String>>> DayNumMap = new HashMap<String, Map<String, Map<String, String>>>();
+	private static Map<String, Map<String, Map<String, String>>> DayNumMap = new HashMap<String, Map<String, Map<String, String>>>();
 
 	@Override
-	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
 			String platformID = pIt.next();
@@ -163,12 +164,15 @@ public class PayDay extends AbstractStaticsModule {
 		List<String> options = new ArrayList<String>();
 		options.add("Uid = '" + uid + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				result.put("FirstCashTime", resultSet.getString("FirstCashTime"));
 				result.put("TotalCashNum", resultSet.getString("TotalCashNum"));
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -192,11 +196,14 @@ public class PayDay extends AbstractStaticsModule {
 		options.add("Date = '" + date + "'");
 		options.add("HostID = '" + hostID + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				uids.add(resultSet.getString("Uid"));
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -221,12 +228,15 @@ public class PayDay extends AbstractStaticsModule {
 		options.add("Date = '" + date + "'");
 		options.add("HostID = '" + hostID + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				totalNumMap.put("TotalPayGold", resultSet.getString("TotalPayGold"));
 				totalNumMap.put("TotalCashNum", resultSet.getString("TotalCashNum"));
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -237,8 +247,8 @@ public class PayDay extends AbstractStaticsModule {
 	}
 
 	@Override
-	public boolean cronExecute() {
-		synchronized (DayNumMap) {
+	public synchronized boolean cronExecute() {
+//		synchronized (DayNumMap) {
 			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
 			Map<String, String> hostMap = ServerDB.getStaticsServers();
 			Iterator<String> hIt = hostMap.keySet().iterator();
@@ -277,7 +287,7 @@ public class PayDay extends AbstractStaticsModule {
 				}
 
 			}
-		}
+//		}
 		return true;
 	}
 

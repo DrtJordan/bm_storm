@@ -3,9 +3,9 @@ package com.yuhe.american.db;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
-
 
 public class ServerDB {
 	// 记录HostID与PlatformID的对应关系
@@ -24,14 +24,18 @@ public class ServerDB {
 			String sql = "select a.serverid as HostID, c.platformid as PlatformID from smcs.srvgroupinfo a, "
 					+ "smcs.servergroup b, smcs.servers c where a.groupid = b.id and b.name = '统计专区' and a.serverid = c.hostid";
 			Connection conn = DBManager.getConn();
-			ResultSet results = DBManager.query(conn, sql);
 			try {
+				Statement smst = conn.createStatement();
+				ResultSet results = DBManager.query(smst, conn, sql);
 				while (results.next()) {
 					String hostID = results.getString("HostID");
 					String platformID = results.getString("PlatformID");
 					HOST_MAP.put(hostID, platformID);
 				}
 				HostLastUpdateTime = nowTime;
+				results.close();
+				smst.close();
+
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,10 +25,10 @@ import com.yuhe.american.db.statics.OnlineTimeDB;
  */
 public class OnlineTime extends AbstractStaticsModule {
 	// 记录玩家的在线时长信息，格式:Map<HostID, Map<Date,Map<Uid, OnlineTime>>>
-	private Map<String, Map<String, Map<String, Integer>>> PlayerOnlineTimes = new HashMap<String, Map<String, Map<String, Integer>>>();
+	private static Map<String, Map<String, Map<String, Integer>>> PlayerOnlineTimes = new HashMap<String, Map<String, Map<String, Integer>>>();
 	// 记录在线时间段信息,格式:Map<HostID, Map<Date, Map<UserType,
 	// Map<ZoneID,OnlineTime>>>>
-	private Map<String, Map<String, Map<Integer, Map<String, Integer>>>> OnlineTimeZones = new HashMap<String, Map<String, Map<Integer, Map<String, Integer>>>>();
+	private static Map<String, Map<String, Map<Integer, Map<String, Integer>>>> OnlineTimeZones = new HashMap<String, Map<String, Map<Integer, Map<String, Integer>>>>();
 	// 在线时长区间ID
 	private static final Map<String, int[]> ZONE_MAP = new HashMap<String, int[]>() {
 		private static final long serialVersionUID = 1L;
@@ -165,8 +166,9 @@ public class OnlineTime extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time <= '" + date + " 23:59:59'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String uid = resultSet.getString("Uid");
 				int onTime = resultSet.getInt("OnTime");
@@ -181,6 +183,8 @@ public class OnlineTime extends AbstractStaticsModule {
 				// 这里也要更新时长统计区间
 				updateZoneTimes(hostID, date, userType, orgOnTime, totalOnTime);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

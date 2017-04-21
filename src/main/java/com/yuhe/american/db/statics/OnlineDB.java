@@ -3,6 +3,7 @@ package com.yuhe.american.db.statics;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,15 +38,18 @@ public class OnlineDB{
 			where += " and Time <= '" + options.get("EndTime") + "'";
 		String sql = "select * from "+platformID+"_statics.tblOnline " + where;
 		Connection conn = DBManager.getConn();
-		ResultSet results = DBManager.query(conn, sql);
 		Map<String, Integer> timeNumMap = new HashMap<String, Integer>();
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet results = DBManager.query(smst, conn, sql);
 			while (results.next()) {
 				String timeStr = results.getString("Time");
 				String[] times = timeStr.split("\\.");
 				int onlineNum = results.getInt("OnlineNum");
 				timeNumMap.put(times[0], onlineNum);
 			}
+			results.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import com.yuhe.american.db.DBManager;
 
@@ -21,7 +22,7 @@ public class RetentionDB {
 	// 付费留存统计表相关列
 	private static final String[] PAY_RETENTION_DB_COLS = { "LoginNum", "FirstPayUserNum", "1Days", "2Days", "3Days",
 			"4Days", "5Days", "6Days", "7Days", "10Days", "13Days", "15Days", "29Days", "30Days" };
-
+	public static Logger logger = Logger.getLogger(RetentionDB.class);
 	/**
 	 * 插入登陆留存统计表
 	 * 
@@ -50,6 +51,7 @@ public class RetentionDB {
 		String sql = "insert into " + platformID + "_statics.tblRetention(PlatformID, HostID, Date,"
 				+ StringUtils.join(cols, ",") + ") values('" + StringUtils.join(values, "','")
 				+ "') on duplicate key update " + StringUtils.join(updateValues, ",");
+//		logger.info(sql);
 		DBManager.execute(sql);
 	}
 	/**

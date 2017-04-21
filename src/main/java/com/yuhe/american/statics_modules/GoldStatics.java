@@ -3,6 +3,7 @@ package com.yuhe.american.statics_modules;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -114,8 +115,9 @@ public class GoldStatics extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time < '" + endTime + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				String uid = resultSet.getString("Uid");
 				String reason = resultSet.getString("Reason");
@@ -139,6 +141,8 @@ public class GoldStatics extends AbstractStaticsModule {
 				}
 				uids.add(uid);
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -223,8 +227,9 @@ public class GoldStatics extends AbstractStaticsModule {
 		options.add("Date = '" + date + "'");
 		options.add("HostID = '" + hostID + "'");
 		Connection conn = DBManager.getConn();
-		ResultSet resultSet = CommonDB.query(conn, tblName, options);
 		try {
+			Statement smst = conn.createStatement();
+			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
 				totalNumMap.put("GoldConsume", resultSet.getInt("GoldConsume"));
 				totalNumMap.put("GoldProduce", resultSet.getInt("GoldProduce"));
@@ -235,6 +240,8 @@ public class GoldStatics extends AbstractStaticsModule {
 				totalNumMap.put("CreditGoldProduce", resultSet.getInt("CreditGoldProduce"));
 				totalNumMap.put("CreditGoldConsume", resultSet.getInt("CreditGoldConsume"));
 			}
+			resultSet.close();
+			smst.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
