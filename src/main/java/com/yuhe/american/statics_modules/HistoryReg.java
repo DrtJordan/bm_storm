@@ -27,8 +27,9 @@ public class HistoryReg extends AbstractStaticsModule {
 	// 数据格式：<HostID, <date, <Type, Number>>>
 	private static Map<String, Map<String, Map<String, Integer>>> StaticsNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
 	public static Logger logger = Logger.getLogger(HistoryReg.class);
+
 	@Override
-	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Set<String> flagSet = new HashSet<String>(); // 标志位，用来记录到底哪些hostid哪些date需要更新
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
@@ -83,9 +84,9 @@ public class HistoryReg extends AbstractStaticsModule {
 			String[] strs = StringUtils.split(str, ";");
 			if (strs.length == 3) {
 				Map<String, Map<String, Integer>> hostNumMap = StaticsNumMap.get(strs[1]);
-				if(hostNumMap != null){
+				if (hostNumMap != null) {
 					Map<String, Integer> numMap = hostNumMap.get(strs[2]);
-					if(numMap != null){
+					if (numMap != null) {
 						HistoryRegDB.batchInsert(strs[0], strs[1], strs[2], numMap);
 					}
 				}
@@ -161,7 +162,7 @@ public class HistoryReg extends AbstractStaticsModule {
 	 * 定时写入数据库以及定时统计没有日志数据的服
 	 */
 	@Override
-	public synchronized boolean cronExecute() {
+	public boolean cronExecute() {
 		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
 		Map<String, String> hostMap = ServerDB.getStaticsServers();
 		Iterator<String> hIt = hostMap.keySet().iterator();

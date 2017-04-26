@@ -42,7 +42,7 @@ public class PayZone extends AbstractStaticsModule {
 	};
 
 	@Override
-	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
 			String platformID = pIt.next();
@@ -205,29 +205,27 @@ public class PayZone extends AbstractStaticsModule {
 	}
 
 	@Override
-	public synchronized boolean cronExecute() {
-//		synchronized (HostUpdateMap) {
-			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
-			Map<String, String> hostMap = ServerDB.getStaticsServers();
-			Iterator<String> hIt = hostMap.keySet().iterator();
-			while (hIt.hasNext()) {
-				String hostID = hIt.next();
-				String platformID = hostMap.get(hostID);
-				String updateTime = HostUpdateMap.get(hostID);
-				if (updateTime == null) {
-					// 从数据库中获取数据
-					Map<String, Integer> zoneMap = getZoneMapFromDB(platformID, hostID);
-					HostZoneMap.put(hostID, zoneMap);
-					HostUpdateMap.put(hostID, today);
-					PayZoneDB.insert(platformID, hostID, today, zoneMap);
-				} else if (!today.equals(updateTime)) {
-					// 把昨天的数据拿过来就行
-					Map<String, Integer> zoneMap = HostZoneMap.get(hostID);
-					HostUpdateMap.put(hostID, today);
-					PayZoneDB.insert(platformID, hostID, today, zoneMap);
-				}
+	public boolean cronExecute() {
+		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+		Map<String, String> hostMap = ServerDB.getStaticsServers();
+		Iterator<String> hIt = hostMap.keySet().iterator();
+		while (hIt.hasNext()) {
+			String hostID = hIt.next();
+			String platformID = hostMap.get(hostID);
+			String updateTime = HostUpdateMap.get(hostID);
+			if (updateTime == null) {
+				// 从数据库中获取数据
+				Map<String, Integer> zoneMap = getZoneMapFromDB(platformID, hostID);
+				HostZoneMap.put(hostID, zoneMap);
+				HostUpdateMap.put(hostID, today);
+				PayZoneDB.insert(platformID, hostID, today, zoneMap);
+			} else if (!today.equals(updateTime)) {
+				// 把昨天的数据拿过来就行
+				Map<String, Integer> zoneMap = HostZoneMap.get(hostID);
+				HostUpdateMap.put(hostID, today);
+				PayZoneDB.insert(platformID, hostID, today, zoneMap);
 			}
-//		}
+		}
 		return true;
 	}
 

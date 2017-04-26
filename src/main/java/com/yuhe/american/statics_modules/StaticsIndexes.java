@@ -19,6 +19,7 @@ public class StaticsIndexes {
 		indexMap.put("UserPayDay", new UserPayDay()); //玩家每日充值
 		indexMap.put("PayDay", new PayDay());//单服单日充值统计
 		indexMap.put("PayZone", new PayZone()); //充值区间统计
+		indexMap.put("VIP", new VIP()); //VIP统计
 	};
 
 	/**

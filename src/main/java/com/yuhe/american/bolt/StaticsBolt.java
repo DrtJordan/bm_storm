@@ -20,7 +20,7 @@ public class StaticsBolt extends BaseBasicBolt {
 
 	private static final long serialVersionUID = 1L;
 	// 多久触发一次tick tuple定时器操作,单位是秒
-	private static final int EmitFrequencyInSeconds = 60;
+	private static final int EmitFrequencyInSeconds = 30;
 
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		if (!TupleUtils.isTick(input)) {

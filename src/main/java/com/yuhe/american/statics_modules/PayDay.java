@@ -34,7 +34,7 @@ public class PayDay extends AbstractStaticsModule {
 	private static Map<String, Map<String, Map<String, String>>> DayNumMap = new HashMap<String, Map<String, Map<String, String>>>();
 
 	@Override
-	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
 			String platformID = pIt.next();
@@ -247,47 +247,44 @@ public class PayDay extends AbstractStaticsModule {
 	}
 
 	@Override
-	public synchronized boolean cronExecute() {
-//		synchronized (DayNumMap) {
-			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
-			Map<String, String> hostMap = ServerDB.getStaticsServers();
-			Iterator<String> hIt = hostMap.keySet().iterator();
-			while (hIt.hasNext()) {
-				String hostID = hIt.next();
-				String platformID = hostMap.get(hostID);
-				Map<String, Map<String, String>> hostTotalMap = DayNumMap.get(hostID);
-				if (hostTotalMap == null) {
-					hostTotalMap = new HashMap<String, Map<String, String>>();
-					DayNumMap.put(hostID, hostTotalMap);
-				}
-				Map<String, String> todayTotalMap = hostTotalMap.get(today);
-				if (todayTotalMap == null) {
-					/*
-					 * 先判断昨天有没有数据，昨天如果有数据就用昨天的充值总额，但是充值uid为空
-					 * 如果昨天没有数据，则需要从数据库中获取数据出来
-					 */
-					todayTotalMap = new HashMap<String, String>();
-					String yesterday = DateUtils2.getOverDate(today, -1);
-					Map<String, String> yesterdayTotalMap = hostTotalMap.get(yesterday);
-					if (yesterdayTotalMap == null) {
-						todayTotalMap = loadDatePayInfoFromDB(platformID, hostID, today);
-						// 充值人数Uid列表也要加上
-						Set<String> uids = loadPayUserListPayFromDB(platformID, hostID, today);
-						todayTotalMap.put("PayUserUids", StringUtils.join(uids, ",")); // 充值玩家uid列表
-						todayTotalMap.put("PayUserNum", Integer.toString(uids.size())); // 人数也为空
-					} else {
-						todayTotalMap.put("TotalPayGold", yesterdayTotalMap.getOrDefault("TotalPayGold", "0"));
-						todayTotalMap.put("TotalCashNum", yesterdayTotalMap.getOrDefault("TotalCashNum", "0"));
-						todayTotalMap.put("PayUserUids", ""); // 充值名单为空
-						todayTotalMap.put("PayUserNum", "0"); // 人数也为空
-					}
-					hostTotalMap.put(today, todayTotalMap);
-					// 记录入库
-					PayDayStaticsDB.insertPayInfo(platformID, hostID, today, todayTotalMap);
-				}
-
+	public boolean cronExecute() {
+		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+		Map<String, String> hostMap = ServerDB.getStaticsServers();
+		Iterator<String> hIt = hostMap.keySet().iterator();
+		while (hIt.hasNext()) {
+			String hostID = hIt.next();
+			String platformID = hostMap.get(hostID);
+			Map<String, Map<String, String>> hostTotalMap = DayNumMap.get(hostID);
+			if (hostTotalMap == null) {
+				hostTotalMap = new HashMap<String, Map<String, String>>();
+				DayNumMap.put(hostID, hostTotalMap);
 			}
-//		}
+			Map<String, String> todayTotalMap = hostTotalMap.get(today);
+			if (todayTotalMap == null) {
+				/*
+				 * 先判断昨天有没有数据，昨天如果有数据就用昨天的充值总额，但是充值uid为空 如果昨天没有数据，则需要从数据库中获取数据出来
+				 */
+				todayTotalMap = new HashMap<String, String>();
+				String yesterday = DateUtils2.getOverDate(today, -1);
+				Map<String, String> yesterdayTotalMap = hostTotalMap.get(yesterday);
+				if (yesterdayTotalMap == null) {
+					todayTotalMap = loadDatePayInfoFromDB(platformID, hostID, today);
+					// 充值人数Uid列表也要加上
+					Set<String> uids = loadPayUserListPayFromDB(platformID, hostID, today);
+					todayTotalMap.put("PayUserUids", StringUtils.join(uids, ",")); // 充值玩家uid列表
+					todayTotalMap.put("PayUserNum", Integer.toString(uids.size())); // 人数也为空
+				} else {
+					todayTotalMap.put("TotalPayGold", yesterdayTotalMap.getOrDefault("TotalPayGold", "0"));
+					todayTotalMap.put("TotalCashNum", yesterdayTotalMap.getOrDefault("TotalCashNum", "0"));
+					todayTotalMap.put("PayUserUids", ""); // 充值名单为空
+					todayTotalMap.put("PayUserNum", "0"); // 人数也为空
+				}
+				hostTotalMap.put(today, todayTotalMap);
+				// 记录入库
+				PayDayStaticsDB.insertPayInfo(platformID, hostID, today, todayTotalMap);
+			}
+
+		}
 		return true;
 	}
 

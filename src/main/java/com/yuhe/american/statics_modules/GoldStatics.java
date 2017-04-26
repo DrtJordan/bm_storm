@@ -266,11 +266,11 @@ public class GoldStatics extends AbstractStaticsModule {
 		String uidStr = (String) staticsResult.getOrDefault("Uids", "");
 		String[] uids = StringUtils.split(uidStr, "','");
 		Set<String> uidSet = new HashSet<String>();
-		if(uids.length > 0){
+		if (uids.length > 0) {
 			CollectionUtils.addAll(uidSet, uids);
 		}
 		String[] tUids = StringUtils.split(values.getOrDefault("Uids", ""), "','");
-		if(tUids.length > 0){
+		if (tUids.length > 0) {
 			CollectionUtils.addAll(uidSet, tUids);
 		}
 		staticsResult.put("Uids", StringUtils.join(uidSet, "','"));
@@ -282,54 +282,52 @@ public class GoldStatics extends AbstractStaticsModule {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public boolean cronExecute() {
-		synchronized (PlatformStatics) {
-			Set<String> hostSet = new HashSet<String>();
-			Iterator<String> pIt = PlatformStatics.keySet().iterator();
-			while (pIt.hasNext()) {
-				String platformID = pIt.next();
-				Map pResult = PlatformStatics.get(platformID);
-				Iterator<String> hIt = pResult.keySet().iterator();
-				while (hIt.hasNext()) {
-					String hostID = hIt.next();
-					hostSet.add(hostID);
-					Map hResult = (Map) pResult.get(hostID);
-					Iterator<String> dIt = hResult.keySet().iterator();
-					while (dIt.hasNext()) {
-						String date = dIt.next();
-						Map dResult = (Map) hResult.get(date);
-						Iterator<String> rIt = dResult.keySet().iterator();
-						while (rIt.hasNext()) {
-							String reason = rIt.next();
-							Map gResult = (Map) dResult.get(reason);
-							Iterator<String> gIt = gResult.keySet().iterator();
-							while (gIt.hasNext()) {
-								String goldType = gIt.next();
-								Map sResult = (Map) gResult.get(goldType);
-								Iterator<String> sIt = sResult.keySet().iterator();
-								while (sIt.hasNext()) {
-									String staticsType = sIt.next();
-									Map<String, String> values = (Map<String, String>) sResult.get(staticsType);
-									GoldDB.batchInsert(platformID, hostID, date, reason, goldType, staticsType, values);
-									updateTotalGold(platformID, hostID, date, goldType, staticsType,
-											Integer.parseInt(values.getOrDefault("Value", "0")));
-								}
+		Set<String> hostSet = new HashSet<String>();
+		Iterator<String> pIt = PlatformStatics.keySet().iterator();
+		while (pIt.hasNext()) {
+			String platformID = pIt.next();
+			Map pResult = PlatformStatics.get(platformID);
+			Iterator<String> hIt = pResult.keySet().iterator();
+			while (hIt.hasNext()) {
+				String hostID = hIt.next();
+				hostSet.add(hostID);
+				Map hResult = (Map) pResult.get(hostID);
+				Iterator<String> dIt = hResult.keySet().iterator();
+				while (dIt.hasNext()) {
+					String date = dIt.next();
+					Map dResult = (Map) hResult.get(date);
+					Iterator<String> rIt = dResult.keySet().iterator();
+					while (rIt.hasNext()) {
+						String reason = rIt.next();
+						Map gResult = (Map) dResult.get(reason);
+						Iterator<String> gIt = gResult.keySet().iterator();
+						while (gIt.hasNext()) {
+							String goldType = gIt.next();
+							Map sResult = (Map) gResult.get(goldType);
+							Iterator<String> sIt = sResult.keySet().iterator();
+							while (sIt.hasNext()) {
+								String staticsType = sIt.next();
+								Map<String, String> values = (Map<String, String>) sResult.get(staticsType);
+								GoldDB.batchInsert(platformID, hostID, date, reason, goldType, staticsType, values);
+								updateTotalGold(platformID, hostID, date, goldType, staticsType,
+										Integer.parseInt(values.getOrDefault("Value", "0")));
 							}
 						}
 					}
 				}
 			}
-			if (PlatformStatics.size() > 0)
-				PlatformStatics = new HashMap(); // 重新赋值
-			// 需要把当天没有数据的服的昨天的总钻石数统计到今天来
-			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
-			Map<String, String> hostMap = ServerDB.getStaticsServers();
-			Iterator<String> hIt = hostMap.keySet().iterator();
-			while (hIt.hasNext()) {
-				String hostID = hIt.next();
-				if (!DayNumMap.containsKey(hostID) || !DayNumMap.get(hostID).containsKey(today)) {
-					String platformID = hostMap.get(hostID);
-					staticsTotalGold(platformID, hostID, today);
-				}
+		}
+		if (PlatformStatics.size() > 0)
+			PlatformStatics = new HashMap(); // 重新赋值
+		// 需要把当天没有数据的服的昨天的总钻石数统计到今天来
+		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+		Map<String, String> hostMap = ServerDB.getStaticsServers();
+		Iterator<String> hIt = hostMap.keySet().iterator();
+		while (hIt.hasNext()) {
+			String hostID = hIt.next();
+			if (!DayNumMap.containsKey(hostID) || !DayNumMap.get(hostID).containsKey(today)) {
+				String platformID = hostMap.get(hostID);
+				staticsTotalGold(platformID, hostID, today);
 			}
 		}
 		return true;

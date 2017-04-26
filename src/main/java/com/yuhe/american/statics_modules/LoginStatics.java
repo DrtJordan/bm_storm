@@ -33,7 +33,7 @@ public class LoginStatics extends AbstractStaticsModule {
 	private static Map<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>> PlatformStatics = new HashMap<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>>();
 
 	@Override
-	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
 			String platformID = pIt.next();
@@ -174,7 +174,7 @@ public class LoginStatics extends AbstractStaticsModule {
 	 * 定时将统计结果写入数据库
 	 */
 	@Override
-	public synchronized boolean cronExecute() {
+	public boolean cronExecute() {
 		Iterator<String> pIt = PlatformStatics.keySet().iterator();
 		while (pIt.hasNext()) {
 			String platformID = pIt.next();

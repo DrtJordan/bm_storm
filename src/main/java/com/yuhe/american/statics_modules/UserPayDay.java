@@ -26,7 +26,7 @@ import com.yuhe.american.utils.DateUtils2;
  */
 public class UserPayDay extends AbstractStaticsModule {
 	// 记录当天服的每个人的充值次数
-	// 数据格式：<HostID, <date, <Type, Number>>>
+	// 数据格式：<HostID, <date, <Uid, Number>>>
 	private static Map<String, Map<String, Map<String, Integer>>> PayNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
 	// 记录当天服的充值频率
 	// 数据格式：<HostID, <Date, <FrequencyType, Number>>>
@@ -183,7 +183,7 @@ public class UserPayDay extends AbstractStaticsModule {
 				int newFrequencyNum = dateFreResult.getOrDefault(newFrequencyID, 0);
 				dateFreResult.put(newFrequencyID, newFrequencyNum + 1);
 			} else if (!oldFrequencyID.equals(newFrequencyID)) {
-				int oldFrquencyNum = dateFreResult.get(oldFrequencyID);
+				int oldFrquencyNum = dateFreResult.getOrDefault(oldFrequencyID, 0);
 				int newFrequencyNum = dateFreResult.getOrDefault(newFrequencyID, 0);
 				dateFreResult.put(oldFrequencyID, Math.max(0, oldFrquencyNum - 1));
 				dateFreResult.put(newFrequencyID, newFrequencyNum + 1);

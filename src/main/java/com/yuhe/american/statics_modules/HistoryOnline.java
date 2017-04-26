@@ -27,7 +27,7 @@ public class HistoryOnline extends AbstractStaticsModule {
 	private static Map<String, Map<String, Map<String, Integer>>> StaticsNumMap = new HashMap<String, Map<String, Map<String, Integer>>>();
 
 	@Override
-	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Set<String> flagSet = new HashSet<String>(); // 标志位，用来记录到底哪些hostid哪些date需要更新
 		Iterator<String> pIt = platformResults.keySet().iterator();
 		while (pIt.hasNext()) {
@@ -157,33 +157,34 @@ public class HistoryOnline extends AbstractStaticsModule {
 	}
 
 	@Override
-	public synchronized boolean cronExecute() {
-//		synchronized (StaticsNumMap) {
-			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
-			Map<String, String> hostMap = ServerDB.getStaticsServers();
-			Iterator<String> hIt = hostMap.keySet().iterator();
-			while (hIt.hasNext()) {
-				String hostID = hIt.next();
-				String platformID = hostMap.get(hostID);
-				Map<String, Map<String, Integer>> hostResult = StaticsNumMap.get(hostID);
-				if (hostResult == null) {
-					hostResult = new HashMap<String, Map<String, Integer>>();
-					StaticsNumMap.put(hostID, hostResult);
-				}
-				Map<String, Integer> dateResult = hostResult.get(today);
-				if (dateResult == null) {
-					hostResult = loadFromDB(platformID, hostID, today);
-					dateResult = hostResult.get(today);
-					hostResult.put(today, dateResult);
-					int totalOnline = dateResult.get("TotalOnline");
-					int maxOnline = dateResult.get("MaxOnline");
-					int minOnline = dateResult.get("MinOnline");
-					long period = getPeriod();
-					int aveNum = (int) Math.floorDiv(totalOnline, period);
-					HistoryOnlineDB.batchInsert(platformID, hostID, today, maxOnline, aveNum, minOnline);
-				}
+	public boolean cronExecute() {
+		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+		Map<String, String> hostMap = ServerDB.getStaticsServers();
+		Iterator<String> hIt = hostMap.keySet().iterator();
+		while (hIt.hasNext()) {
+			String hostID = hIt.next();
+			String platformID = hostMap.get(hostID);
+			Map<String, Map<String, Integer>> hostResult = StaticsNumMap.get(hostID);
+			if (hostResult == null) {
+				hostResult = new HashMap<String, Map<String, Integer>>();
+				StaticsNumMap.put(hostID, hostResult);
 			}
-//		}
+			Map<String, Integer> dateResult = hostResult.get(today);
+			if (dateResult == null) {
+				hostResult = loadFromDB(platformID, hostID, today);
+				dateResult = hostResult.get(today);
+				hostResult.put(today, dateResult);
+				int totalOnline = dateResult.get("TotalOnline");
+				int maxOnline = dateResult.get("MaxOnline");
+				int minOnline = dateResult.get("MinOnline");
+				long period = getPeriod();
+				int aveNum = 0;
+				if(period != 0){
+					aveNum = (int) Math.floorDiv(totalOnline, period);
+				}
+				HistoryOnlineDB.batchInsert(platformID, hostID, today, maxOnline, aveNum, minOnline);
+			}
+		}
 		return true;
 	}
 

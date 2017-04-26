@@ -41,7 +41,7 @@ public class Retention extends AbstractStaticsModule {
 	
 	public static Logger logger = Logger.getLogger(Retention.class);
 	@Override
-	public synchronized boolean execute(Map<String, List<Map<String, String>>> platformResults) {
+	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Map<String, Map<String, Map<String, Set<String>>>> platformUids = getLoginUid(platformResults);
 		mergeTodayLoginUids(platformUids);
 		Iterator<String> pIt = platformUids.keySet().iterator();
@@ -337,7 +337,7 @@ public class Retention extends AbstractStaticsModule {
 		Map<String, String> keyValues = new HashMap<String, String>();
 		keyValues.put("NewNum", Integer.toString(regNum));
 		keyValues.put("LoginNum", Integer.toString(loginNum));
-//		logger.info("hostID:"+hostID+"date:"+date+",newNum:"+regNum+",loginNum:"+loginNum);
+//		logger.info("hostID:"+hostID+",date:"+date+",newNum:"+regNum+",loginNum:"+loginNum);
 		RetentionDB.insertLoginRetention(platformID, hostID, date, keyValues);
 		// 再统计每天的留存率
 		int[] days = { -1, -2, -3, -4, -5, -6, -7, -10, -13, -15, -29, -30 };
@@ -348,7 +348,7 @@ public class Retention extends AbstractStaticsModule {
 			Map<String, String> map = new HashMap<String, String>();
 			String col = Math.abs(day) + "Days";
 			map.put(col, Float.toString(rate));
-			RetentionDB.insertLoginRetention(platformID, hostID, date, map);
+			RetentionDB.insertLoginRetention(platformID, hostID, dayStr, map);
 		}
 	}
 
@@ -379,7 +379,7 @@ public class Retention extends AbstractStaticsModule {
 			Map<String, String> map = new HashMap<String, String>();
 			String col = Math.abs(day) + "Days";
 			map.put(col, Float.toString(rate));
-			RetentionDB.insertPayRetention(platformID, hostID, date, map);
+			RetentionDB.insertPayRetention(platformID, hostID, dayStr, map);
 		}
 	}
 
@@ -442,7 +442,7 @@ public class Retention extends AbstractStaticsModule {
 	}
 
 	@Override
-	public synchronized boolean cronExecute() {
+	public boolean cronExecute() {
 //		synchronized (PeriodLoginUids) {
 			Iterator<String> pIt = PeriodLoginUids.keySet().iterator();
 			while (pIt.hasNext()) {

@@ -10,8 +10,10 @@ public class MixLoginStatics extends AbstractStaticsModule {
 		Map<String, AbstractStaticsModule> indexMap = StaticsIndexes.GetIndexMap();
 		AbstractStaticsModule retentionModule = indexMap.get("Retention");
 		AbstractStaticsModule onlineTimeModule = indexMap.get("OnlineTime");
+		AbstractStaticsModule vipModule = indexMap.get("VIP");
 		retentionModule.execute(platformResults);
 		onlineTimeModule.execute(platformResults);
+		vipModule.execute(platformResults);
 		return true;
 	}
 
