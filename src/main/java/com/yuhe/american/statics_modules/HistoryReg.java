@@ -43,7 +43,7 @@ public class HistoryReg extends AbstractStaticsModule {
 				String date = times[0];
 				Map<String, Map<String, Integer>> hostResults = StaticsNumMap.get(hostID);
 				if (hostResults == null) {
-					hostResults = loadFromDB(platformID, hostID, date, time);
+					hostResults = loadFromDB(platformID, hostID, date);
 					StaticsNumMap.put(hostID, hostResults);
 				}
 				Map<String, Integer> dateResult = hostResults.get(date);
@@ -103,8 +103,7 @@ public class HistoryReg extends AbstractStaticsModule {
 	 * @param date
 	 * @return
 	 */
-	private Map<String, Map<String, Integer>> loadFromDB(String platformID, String hostID, String date,
-			String endTime) {
+	private Map<String, Map<String, Integer>> loadFromDB(String platformID, String hostID, String date) {
 		Map<String, Map<String, Integer>> hostResults = new HashMap<String, Map<String, Integer>>();
 		Map<String, Integer> dateResult = new HashMap<String, Integer>();
 
@@ -116,7 +115,7 @@ public class HistoryReg extends AbstractStaticsModule {
 		List<String> options = new ArrayList<String>();
 		options.add("HostID = '" + hostID + "'");
 		options.add("Time >= '" + date + " 00:00:00'");
-		options.add("Time < '" + endTime + "'");
+		options.add("Time < '" + date + " 23:59:59'");
 		Connection conn = DBManager.getConn();
 		try {
 			Statement smst = conn.createStatement();
@@ -176,8 +175,7 @@ public class HistoryReg extends AbstractStaticsModule {
 			}
 			Map<String, Integer> dateResult = hostResults.get(today);
 			if (dateResult == null) {
-				String endTime = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss");
-				hostResults = loadFromDB(platformID, hostID, today, endTime);
+				hostResults = loadFromDB(platformID, hostID, today);
 				StaticsNumMap.put(hostID, hostResults);
 				dateResult = hostResults.get(today);
 				HistoryRegDB.batchInsert(platformID, hostID, today, dateResult);// 记录入库

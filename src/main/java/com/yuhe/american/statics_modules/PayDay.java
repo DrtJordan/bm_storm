@@ -56,10 +56,17 @@ public class PayDay extends AbstractStaticsModule {
 						DayNumMap.put(hostID, hostTotalMap);
 					}
 					Map<String, String> dateMap = hostTotalMap.get(date);
+					String yesterday = DateUtils2.getOverDate(date, -1);
 					if (dateMap == null) {
 						dateMap = loadDatePayInfoFromDB(platformID, hostID, date);
+						if(dateMap.size() == 0){ //今天还没数据，从昨天的数据里面拿
+							dateMap = loadDatePayInfoFromDB(platformID, hostID, yesterday);
+						}
 						// 充值人数Uid列表也要加上
 						Set<String> uids = loadPayUserListPayFromDB(platformID, hostID, date);
+						if(uids.size() == 0){
+							uids = loadPayUserListPayFromDB(platformID, hostID, yesterday);
+						}
 						dateMap.put("PayUserUids", StringUtils.join(uids, ",")); // 充值玩家uid列表
 						hostTotalMap.put(date, dateMap);
 					}
@@ -168,7 +175,10 @@ public class PayDay extends AbstractStaticsModule {
 			Statement smst = conn.createStatement();
 			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
 			while (resultSet.next()) {
-				result.put("FirstCashTime", resultSet.getString("FirstCashTime"));
+				//这里查出来的FirstCashTime后面是有个小数点的，例如2016-03-03 15:47:18.0
+				String firstCashTimes = resultSet.getString("FirstCashTime");
+				String[] strs = StringUtils.split(firstCashTimes, ".");
+				result.put("FirstCashTime", strs[0]);
 				result.put("TotalCashNum", resultSet.getString("TotalCashNum"));
 			}
 			resultSet.close();
@@ -269,8 +279,14 @@ public class PayDay extends AbstractStaticsModule {
 				Map<String, String> yesterdayTotalMap = hostTotalMap.get(yesterday);
 				if (yesterdayTotalMap == null) {
 					todayTotalMap = loadDatePayInfoFromDB(platformID, hostID, today);
+					if(todayTotalMap.size() == 0){
+						todayTotalMap = loadDatePayInfoFromDB(platformID, hostID, yesterday);
+					}
 					// 充值人数Uid列表也要加上
 					Set<String> uids = loadPayUserListPayFromDB(platformID, hostID, today);
+					if(uids.size() == 0){
+						uids = loadPayUserListPayFromDB(platformID, hostID, yesterday);
+					}
 					todayTotalMap.put("PayUserUids", StringUtils.join(uids, ",")); // 充值玩家uid列表
 					todayTotalMap.put("PayUserNum", Integer.toString(uids.size())); // 人数也为空
 				} else {
