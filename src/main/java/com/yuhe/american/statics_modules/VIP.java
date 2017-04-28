@@ -24,12 +24,12 @@ public class VIP extends AbstractStaticsModule {
 	 * 记录今天登陆过的VIP等级人数。格式:Map<PlatformID,Map<HostID,
 	 * Map<Date,Map<VipLevel,Map<Type,Set<Uid>>>>>>
 	 */
-	private Map<String, Map<String, Map<String, Map<String, Map<String, Set<String>>>>>> VipResultsMap = new HashMap<String, Map<String, Map<String, Map<String, Map<String, Set<String>>>>>>();
+	private static Map<String, Map<String, Map<String, Map<String, Map<String, Set<String>>>>>> VipResultsMap = new HashMap<String, Map<String, Map<String, Map<String, Map<String, Set<String>>>>>>();
 	// 记录前后8天之内登陆过的VIP玩家的uid，格式：Map<PlatformID,Map<HostID,
 	// Map<Date,Map<VipLevel,Set<Uid>>>>>
-	private Map<String, Map<String, Map<String, Map<String, String>>>> LoginVipMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
+	private static Map<String, Map<String, Map<String, Map<String, String>>>> LoginVipMap = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
 	// 统计标志位，定时统计前先判断一下是否需要统计,格式:Map<HostID,Map<Date, Boolean>>
-	private Map<String, Map<String, Map<String, Boolean>>> StaticsFlagMap = new HashMap<String, Map<String, Map<String, Boolean>>>();
+	private static Map<String, Map<String, Map<String, Boolean>>> StaticsFlagMap = new HashMap<String, Map<String, Map<String, Boolean>>>();
 
 	@Override
 	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
@@ -82,13 +82,13 @@ public class VIP extends AbstractStaticsModule {
 		Map<String, Set<String>> levelResult = dateResult.get(vipLevel);
 		if (levelResult == null) {
 			levelResult = new HashMap<String, Set<String>>();
-			levelResult.put("VipNums", new HashSet<String>());
-			levelResult.put("NowVipNums", new HashSet<String>());
+			levelResult.put("VipNum", new HashSet<String>());
+			levelResult.put("NowVipNum", new HashSet<String>());
 			dateResult.put(vipLevel, levelResult);
 		}
-		levelResult.get("VipNums").add(uid);
+		levelResult.get("VipNum").add(uid);
 		if (isVip.equals("1")) {
-			levelResult.get("NowVipNums").add(uid);
+			levelResult.get("NowVipNum").add(uid);
 		}
 	}
 
@@ -180,15 +180,15 @@ public class VIP extends AbstractStaticsModule {
 				Map<String, Set<String>> levelResult = vipNumMap.get(vipLevel);
 				if (levelResult == null) {
 					levelResult = new HashMap<String, Set<String>>();
-					levelResult.put("VipNums", new HashSet<String>());
-					levelResult.put("NowVipNums", new HashSet<String>());
+					levelResult.put("VipNum", new HashSet<String>());
+					levelResult.put("NowVipNum", new HashSet<String>());
 					vipNumMap.put(vipLevel, levelResult);
 				}
 				if (isVip == 1) {
-					Set<String> nowVipUids = levelResult.get("NowVipNums");
+					Set<String> nowVipUids = levelResult.get("NowVipNum");
 					nowVipUids.add(uid);
 				}
-				Set<String> vipNumUids = levelResult.get("VipNums");
+				Set<String> vipNumUids = levelResult.get("VipNum");
 				vipNumUids.add(uid);
 			}
 			resultSet.close();
@@ -280,11 +280,7 @@ public class VIP extends AbstractStaticsModule {
 						Map<String, Set<String>> levelResult = dateResult.get(vipLevel);
 						VipDB.insert(platformID, hostID, date, vipLevel, levelResult);
 					}
-					if (dateResult.size() > 0) {
-						// dateResult置为空
-						dateResult = new HashMap<String, Map<String, Set<String>>>();
-						hostResult.put(date, dateResult);
-					}
+ 
 				}
 			}
 		}
