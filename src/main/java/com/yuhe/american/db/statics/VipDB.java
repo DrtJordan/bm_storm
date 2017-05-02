@@ -56,18 +56,15 @@ public class VipDB {
 	 */
 	public static boolean updateLostNum(String platformID, String hostID, String date,
 			Map<String, Integer> lostNumMap) {
-		List<String> sqlList = new ArrayList<String>();
 		Iterator<String> it = lostNumMap.keySet().iterator();
 		String headSql = "update " + platformID + "_statics.tblVIP set LostNum = '";
-		String where = "' where HostID = '" + hostID + "' and Date = '" + date;
+		String where = "' where HostID = '" + hostID + "' and Date = '" + date ;
 		while (it.hasNext()) {
 			String vipLevel = it.next();
 			int lostNum = lostNumMap.get(vipLevel);
-			String sql = headSql + lostNum + where + "' and VipLevel = '" + vipLevel + "';";
-			sqlList.add(sql);
-		}
-		if (sqlList.size() > 0)
-			DBManager.execute(StringUtils.join(sqlList, ""));
+			String sql = headSql + lostNum + where + "' and VipLevel = '" + vipLevel + "'";
+			DBManager.execute(sql);
+		}	
 		return true;
 	}
 }

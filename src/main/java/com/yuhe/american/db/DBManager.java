@@ -89,6 +89,7 @@ public class DBManager {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			log.error("erro sql:"+sql);
 		}
 		return rs;
 	}
@@ -107,6 +108,7 @@ public class DBManager {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			log.error("erro sql:"+sql);
 		} finally {
 			closeConn(conn);
 		}

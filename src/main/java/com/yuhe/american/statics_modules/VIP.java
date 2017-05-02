@@ -344,7 +344,7 @@ public class VIP extends AbstractStaticsModule {
 					}
 				}
 				// 记录入库
-				VipDB.updateLostNum(platformID, hostID, date, lostNumMap);
+				VipDB.updateLostNum(platformID, hostID, off8Day, lostNumMap);
 			}
 		}
 

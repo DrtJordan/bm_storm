@@ -78,7 +78,9 @@ public class HistoryOnline extends AbstractStaticsModule {
 					int maxOnline = numMap.get("MaxOnline");
 					int minOnline = numMap.get("MinOnline");
 					long period = getPeriod();
-					int aveNum = (int) Math.floorDiv(totalOnline, period);
+					int aveNum = 0;
+					if(period != 0)
+						aveNum = (int) Math.floorDiv(totalOnline, period);
 					HistoryOnlineDB.batchInsert(strs[0], strs[1], strs[2], maxOnline, aveNum, minOnline);
 				}
 
