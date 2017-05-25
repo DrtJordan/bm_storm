@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Logger;
@@ -37,9 +38,10 @@ public class Retention extends AbstractStaticsModule {
 	private static Map<String, Map<String, Set<String>>> LoginDayUids = new HashMap<String, Map<String, Set<String>>>();
 	// 记录每次统计周期内的登陆玩家uid，统计完后会清空，数据格式：Map<PlatformID, Map<HostID,
 	// Map<Date,Set<Uid>>>>
-	private static Map<String, Map<String, Map<String, Set<String>>>> PeriodLoginUids = new HashMap<String, Map<String, Map<String, Set<String>>>>();
-	
+	private static Map<String, Map<String, Map<String, Set<String>>>> PeriodLoginUids = new ConcurrentHashMap<String, Map<String, Map<String, Set<String>>>>();
+
 	public static Logger logger = Logger.getLogger(Retention.class);
+
 	@Override
 	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
 		Map<String, Map<String, Map<String, Set<String>>>> platformUids = getLoginUid(platformResults);
@@ -177,7 +179,7 @@ public class Retention extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time <= '" + date + " 23:59:59'");
 		Connection conn = DBManager.getConn();
-		
+
 		try {
 			Statement smst = conn.createStatement();
 			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
@@ -212,7 +214,7 @@ public class Retention extends AbstractStaticsModule {
 		options.add("Time >= '" + date + " 00:00:00'");
 		options.add("Time <= '" + date + " 23:59:59'");
 		Connection conn = DBManager.getConn();
-		
+
 		try {
 			Statement smst = conn.createStatement();
 			ResultSet resultSet = CommonDB.query(smst, conn, tblName, options);
@@ -247,7 +249,7 @@ public class Retention extends AbstractStaticsModule {
 		Set<String> dateResults = hostRegUids.get(date);
 		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
 		if (dateResults == null || date.equals(today)) {
-			//如果是今天（因为今天的注册数据随时会变）或者之前几天的数据为空则冲数据库中加载
+			// 如果是今天（因为今天的注册数据随时会变）或者之前几天的数据为空则冲数据库中加载
 			dateResults = new HashSet<String>();
 			// 从对应数据库中加载
 			String tblName = platformID + "_log.tblAddPlayerLog_" + date.replace("-", "");
@@ -337,7 +339,7 @@ public class Retention extends AbstractStaticsModule {
 		Map<String, String> keyValues = new HashMap<String, String>();
 		keyValues.put("NewNum", Integer.toString(regNum));
 		keyValues.put("LoginNum", Integer.toString(loginNum));
-//		logger.info("hostID:"+hostID+",date:"+date+",newNum:"+regNum+",loginNum:"+loginNum);
+		// logger.info("hostID:"+hostID+",date:"+date+",newNum:"+regNum+",loginNum:"+loginNum);
 		RetentionDB.insertLoginRetention(platformID, hostID, date, keyValues);
 		// 再统计每天的留存率
 		int[] days = { -1, -2, -3, -4, -5, -6, -7, -10, -13, -15, -29, -30 };
@@ -443,49 +445,47 @@ public class Retention extends AbstractStaticsModule {
 
 	@Override
 	public boolean cronExecute() {
-//		synchronized (PeriodLoginUids) {
-			Iterator<String> pIt = PeriodLoginUids.keySet().iterator();
-			while (pIt.hasNext()) {
-				String platformID = pIt.next();
-				Iterator<String> hIt = PeriodLoginUids.get(platformID).keySet().iterator();
-				while (hIt.hasNext()) {
-					String hostID = hIt.next();
-					Iterator<String> dIt = PeriodLoginUids.get(platformID).get(hostID).keySet().iterator();
-					while (dIt.hasNext()) {
-						String date = dIt.next();
-						staticsLoginRetention(platformID, hostID, date); // 登陆留存
-						staticsPayUserRetention(platformID, hostID, date);// 付费留存
-					}
-				}
-			}
-			// 其他没有数据的服也要统计
-			String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
-			Map<String, String> hostMap = ServerDB.getStaticsServers();
-			Iterator<String> hIt = hostMap.keySet().iterator();
+		Iterator<String> pIt = PeriodLoginUids.keySet().iterator();
+		while (pIt.hasNext()) {
+			String platformID = pIt.next();
+			Iterator<String> hIt = PeriodLoginUids.get(platformID).keySet().iterator();
 			while (hIt.hasNext()) {
 				String hostID = hIt.next();
-				String platformID = hostMap.get(hostID);
-				if (!LoginDayUids.containsKey(hostID) || !LoginDayUids.get(hostID).containsKey(today)) {
-					Map<String, Set<String>> todayUids = LoginDayUids.get(hostID);
-					if (todayUids == null) {
-						todayUids = new HashMap<String, Set<String>>();
-						LoginDayUids.put(hostID, todayUids);
-					}
-					Set<String> uids = todayUids.get(today);
-					if (uids == null) {
-						uids = loadLoginUidFromDB(platformID, hostID, today);
-						Set<String> logoutUids = loadLogoutUidFromDB(platformID, hostID, today);
-						uids.addAll(logoutUids);
-						todayUids.put(today, uids);
-						staticsLoginRetention(platformID, hostID, today); // 登陆留存
-						staticsPayUserRetention(platformID, hostID, today);// 付费留存
-					}
+				Iterator<String> dIt = PeriodLoginUids.get(platformID).get(hostID).keySet().iterator();
+				while (dIt.hasNext()) {
+					String date = dIt.next();
+					staticsLoginRetention(platformID, hostID, date); // 登陆留存
+					staticsPayUserRetention(platformID, hostID, date);// 付费留存
 				}
 			}
-			// 清空
-			if (PeriodLoginUids.size() > 0)
-				PeriodLoginUids = new HashMap<String, Map<String, Map<String, Set<String>>>>();
-//		}
+		}
+		// 其他没有数据的服也要统计
+		String today = DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+		Map<String, String> hostMap = ServerDB.getStaticsServers();
+		Iterator<String> hIt = hostMap.keySet().iterator();
+		while (hIt.hasNext()) {
+			String hostID = hIt.next();
+			String platformID = hostMap.get(hostID);
+			if (!LoginDayUids.containsKey(hostID) || !LoginDayUids.get(hostID).containsKey(today)) {
+				Map<String, Set<String>> todayUids = LoginDayUids.get(hostID);
+				if (todayUids == null) {
+					todayUids = new HashMap<String, Set<String>>();
+					LoginDayUids.put(hostID, todayUids);
+				}
+				Set<String> uids = todayUids.get(today);
+				if (uids == null) {
+					uids = loadLoginUidFromDB(platformID, hostID, today);
+					Set<String> logoutUids = loadLogoutUidFromDB(platformID, hostID, today);
+					uids.addAll(logoutUids);
+					todayUids.put(today, uids);
+					staticsLoginRetention(platformID, hostID, today); // 登陆留存
+					staticsPayUserRetention(platformID, hostID, today);// 付费留存
+				}
+			}
+		}
+		// 清空
+		if (PeriodLoginUids.size() > 0)
+			PeriodLoginUids = new HashMap<String, Map<String, Map<String, Set<String>>>>();
 		return true;
 	}
 

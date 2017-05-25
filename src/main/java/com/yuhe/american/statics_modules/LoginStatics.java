@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -30,7 +31,7 @@ public class LoginStatics extends AbstractStaticsModule {
 	private static Map<String, Map<String, Set<String>>> StandardUids = new HashMap<String, Map<String, Set<String>>>();
 	// 记录需要入库的统计结果，入库完毕后这些统计结果会被清空，格式：// 记录格式<platformID, HostID,<Date, <Hour,
 	// <Step, StepNum>>>>>
-	private static Map<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>> PlatformStatics = new HashMap<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>>();
+	private static Map<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>> PlatformStatics = new ConcurrentHashMap<String, Map<String, Map<String, Map<String, Map<String, Integer>>>>>();
 
 	@Override
 	public boolean execute(Map<String, List<Map<String, String>>> platformResults) {
