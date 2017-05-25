@@ -451,11 +451,13 @@ public class Retention extends AbstractStaticsModule {
 			Iterator<String> hIt = PeriodLoginUids.get(platformID).keySet().iterator();
 			while (hIt.hasNext()) {
 				String hostID = hIt.next();
-				Iterator<String> dIt = PeriodLoginUids.get(platformID).get(hostID).keySet().iterator();
-				while (dIt.hasNext()) {
-					String date = dIt.next();
-					staticsLoginRetention(platformID, hostID, date); // 登陆留存
-					staticsPayUserRetention(platformID, hostID, date);// 付费留存
+				if (PeriodLoginUids.get(platformID).get(hostID) != null) {
+					Iterator<String> dIt = PeriodLoginUids.get(platformID).get(hostID).keySet().iterator();
+					while (dIt.hasNext()) {
+						String date = dIt.next();
+						staticsLoginRetention(platformID, hostID, date); // 登陆留存
+						staticsPayUserRetention(platformID, hostID, date);// 付费留存
+					}
 				}
 			}
 		}
