@@ -34,6 +34,9 @@ public class EndlessBattleLog extends AbstractLogModule {
 					map.put("Time", time);
 					for (String col : LOG_COLS) {
 						String value = RegUtils.getLogValue(message, col, "");
+						if(col.equals("Rewards") && value.length() > 100){
+							value = value.substring(0, 100); //截断字符串
+						}
 						map.put(col, value);
 					}
 					String platformID = hostMap.get(hostID);
@@ -73,6 +76,9 @@ public class EndlessBattleLog extends AbstractLogModule {
 			map.put("Time", time);
 			for (String col : LOG_COLS) {
 				String value = RegUtils.getLogValue(message, col, "");
+				if(col.equals("Rewards") && value.length() > 100){
+					value = value.substring(0, 100); //截断字符串
+				}
 				map.put(col, value);
 			}
 			String platformID = staticsHosts.get(hostID);

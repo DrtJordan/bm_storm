@@ -180,40 +180,42 @@ public class LoginStatics extends AbstractStaticsModule {
 		while (pIt.hasNext()) {
 			String platformID = pIt.next();
 			Map<String, Map<String, Map<String, Map<String, Integer>>>> hostResults = PlatformStatics.get(platformID);
-			// 再按照小时重新合并整理数据
-			Iterator<String> hIt = hostResults.keySet().iterator();
-			while (hIt.hasNext()) {
-				String hostID = hIt.next();
-				Map<String, Map<String, Map<String, Integer>>> hostResult = hostResults.get(hostID);
-				Iterator<String> dIt = hostResult.keySet().iterator();
-				while (dIt.hasNext()) {
-					String date = dIt.next();
-					Map<String, Map<String, Integer>> dateResult = hostResult.get(date);
-					Iterator<String> hourIt = dateResult.keySet().iterator();
-					while (hourIt.hasNext()) {
-						String hour = hourIt.next();
-						Map<String, Integer> hourResult = dateResult.get(hour);
-						Map<String, Integer> stepResult = new HashMap<String, Integer>();
-						// 点击接口数是用Step=7的数量减去Step=2的数量
-						if (hourResult.containsKey("7") || hourResult.containsKey("2")) {
-							int interfaceNum = hourResult.getOrDefault("7", 0) - hourResult.getOrDefault("2", 0);
-							if (interfaceNum != 0)
-								stepResult.put("1", interfaceNum);
-						}
-						// 其他步骤统计还是按原有step来记录
-						Iterator<String> sIt = hourResult.keySet().iterator();
-						while (sIt.hasNext()) {
-							String step = sIt.next();
-							int stepInt = Integer.parseInt(step);
-							if (stepInt >= 10) {
-								stepResult.put(step, hourResult.get(step));
-							} else if (stepInt >= 3 && stepInt <= 6) { // 进入游戏前的步骤数要减一
-								stepResult.put(Integer.toString(stepInt - 1), hourResult.get(step));
+			if (hostResults != null) {
+				// 再按照小时重新合并整理数据
+				Iterator<String> hIt = hostResults.keySet().iterator();
+				while (hIt.hasNext()) {
+					String hostID = hIt.next();
+					Map<String, Map<String, Map<String, Integer>>> hostResult = hostResults.get(hostID);
+					Iterator<String> dIt = hostResult.keySet().iterator();
+					while (dIt.hasNext()) {
+						String date = dIt.next();
+						Map<String, Map<String, Integer>> dateResult = hostResult.get(date);
+						Iterator<String> hourIt = dateResult.keySet().iterator();
+						while (hourIt.hasNext()) {
+							String hour = hourIt.next();
+							Map<String, Integer> hourResult = dateResult.get(hour);
+							Map<String, Integer> stepResult = new HashMap<String, Integer>();
+							// 点击接口数是用Step=7的数量减去Step=2的数量
+							if (hourResult.containsKey("7") || hourResult.containsKey("2")) {
+								int interfaceNum = hourResult.getOrDefault("7", 0) - hourResult.getOrDefault("2", 0);
+								if (interfaceNum != 0)
+									stepResult.put("1", interfaceNum);
 							}
-						}
-						// 记录数据库
-						if (stepResult.size() > 0) {
-							LoginStaticsDB.insert(platformID, hostID, date, hour, stepResult);
+							// 其他步骤统计还是按原有step来记录
+							Iterator<String> sIt = hourResult.keySet().iterator();
+							while (sIt.hasNext()) {
+								String step = sIt.next();
+								int stepInt = Integer.parseInt(step);
+								if (stepInt >= 10) {
+									stepResult.put(step, hourResult.get(step));
+								} else if (stepInt >= 3 && stepInt <= 6) { // 进入游戏前的步骤数要减一
+									stepResult.put(Integer.toString(stepInt - 1), hourResult.get(step));
+								}
+							}
+							// 记录数据库
+							if (stepResult.size() > 0) {
+								LoginStaticsDB.insert(platformID, hostID, date, hour, stepResult);
+							}
 						}
 					}
 				}

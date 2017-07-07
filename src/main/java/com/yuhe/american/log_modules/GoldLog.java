@@ -47,6 +47,8 @@ public class GoldLog extends AbstractLogModule {
 						String value = RegUtils.getLogValue(message, col, "");
 						if (col.equals("Value") && isSub) {
 							value = "-" + value;
+						}else if (col.equals("Reason") && value.length() > 50) {
+							value = value.substring(0, 50);
 						}
 						col = COL_MAP.getOrDefault(col, col);
 						map.put(col, value);
@@ -97,6 +99,8 @@ public class GoldLog extends AbstractLogModule {
 				String value = RegUtils.getLogValue(message, col, "");
 				if (col.equals("Value") && isSub) {
 					value = "-" + value;
+				}else if (col.equals("Reason") && value.length() > 50) {
+					value = value.substring(0, 50);
 				}
 				col = COL_MAP.getOrDefault(col, col);
 				map.put(col, value);

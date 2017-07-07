@@ -451,7 +451,8 @@ public class Retention extends AbstractStaticsModule {
 			Iterator<String> hIt = PeriodLoginUids.get(platformID).keySet().iterator();
 			while (hIt.hasNext()) {
 				String hostID = hIt.next();
-				if (PeriodLoginUids.get(platformID).get(hostID) != null) {
+				if (PeriodLoginUids != null && PeriodLoginUids.get(platformID) != null
+						&& PeriodLoginUids.get(platformID).get(hostID) != null) {
 					Iterator<String> dIt = PeriodLoginUids.get(platformID).get(hostID).keySet().iterator();
 					while (dIt.hasNext()) {
 						String date = dIt.next();

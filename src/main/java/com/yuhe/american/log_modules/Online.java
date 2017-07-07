@@ -116,10 +116,7 @@ public class Online extends AbstractLogModule {
 		String hostID = json.getString("hostid");
 		String time = json.getString("time");
 		int timestamp = Integer.parseInt(time);
-		if (hostID.equals("2007")) {
-			// 西班牙6服单独处理下，加上5个时区差
-			timestamp += 18000;
-		}
+		
 		time = DateUtils2.getFloorTime(timestamp);
 		if (Integer.parseInt(onlineNum) > 0 && staticsHosts.containsKey(hostID)) {
 			// 获得该HostID对应的所有平台列表
