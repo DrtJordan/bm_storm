@@ -99,21 +99,23 @@ public class AddPlayerLog extends AbstractLogModule {
 			List<Map<String, String>> platformResult = platformResults.get(platformID);
 			if (platformResult == null)
 				platformResult = new ArrayList<Map<String, String>>();
-			platformResult.add(map);
-			platformResults.put(platformID, platformResult);
-			// 同时还要记录该服的总人数
-			Map<String, Map<String, Integer>> platformNum = platformNums.getOrDefault(platformID,
-					new HashMap<String, Map<String, Integer>>());
-			Map<String, Integer> hostNums = platformNum.getOrDefault(hostID, new HashMap<String, Integer>());
-			if (map.get("Sex").equals("1")) {
-				hostNums.put("Male", hostNums.getOrDefault("Male", 0) + 1);
-			} else {
-				hostNums.put("Female", hostNums.getOrDefault("Female", 0) + 1);
+			if (StringUtils.isNotBlank(map.get("Uid"))) { // uid不为空的才添加
+				platformResult.add(map);
+				platformResults.put(platformID, platformResult);
+				// 同时还要记录该服的总人数
+				Map<String, Map<String, Integer>> platformNum = platformNums.getOrDefault(platformID,
+						new HashMap<String, Map<String, Integer>>());
+				Map<String, Integer> hostNums = platformNum.getOrDefault(hostID, new HashMap<String, Integer>());
+				if (map.get("Sex").equals("1")) {
+					hostNums.put("Male", hostNums.getOrDefault("Male", 0) + 1);
+				} else {
+					hostNums.put("Female", hostNums.getOrDefault("Female", 0) + 1);
+				}
+				hostNums.put("TotalNum", hostNums.getOrDefault("TotalNum", 0) + 1);
+				hostNums.put("Time", DateUtils2.GetTimestamp(time));
+				platformNum.put(hostID, hostNums);
+				platformNums.put(platformID, platformNum);
 			}
-			hostNums.put("TotalNum", hostNums.getOrDefault("TotalNum", 0) + 1);
-			hostNums.put("Time", DateUtils2.GetTimestamp(time));
-			platformNum.put(hostID, hostNums);
-			platformNums.put(platformID, platformNum);
 		}
 		// 插入数据库
 		Iterator<String> it = platformResults.keySet().iterator();

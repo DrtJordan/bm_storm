@@ -47,7 +47,7 @@ public class GoldLog extends AbstractLogModule {
 						String value = RegUtils.getLogValue(message, col, "");
 						if (col.equals("Value") && isSub) {
 							value = "-" + value;
-						}else if (col.equals("Reason") && value.length() > 50) {
+						} else if (col.equals("Reason") && value.length() > 50) {
 							value = value.substring(0, 50);
 						}
 						col = COL_MAP.getOrDefault(col, col);
@@ -79,7 +79,7 @@ public class GoldLog extends AbstractLogModule {
 
 	@Override
 	public String getStaticsIndex() {
-//		return "Gold";
+		// return "Gold";
 		return null;
 	}
 
@@ -99,8 +99,8 @@ public class GoldLog extends AbstractLogModule {
 				String value = RegUtils.getLogValue(message, col, "");
 				if (col.equals("Value") && isSub) {
 					value = "-" + value;
-				}else if (col.equals("Reason") && value.length() > 50) {
-					value = value.substring(0, 50);
+				} else if (col.equals("Reason") && value.length() > 30) {
+					value = value.substring(0, 30);
 				}
 				col = COL_MAP.getOrDefault(col, col);
 				map.put(col, value);
@@ -114,8 +114,10 @@ public class GoldLog extends AbstractLogModule {
 			List<Map<String, String>> platformResult = platformResults.get(platformID);
 			if (platformResult == null)
 				platformResult = new ArrayList<Map<String, String>>();
-			platformResult.add(map);
-			platformResults.put(platformID, platformResult);
+			if (StringUtils.isNotBlank(map.get("Uid"))) { // uid不为空的才添加
+				platformResult.add(map);
+				platformResults.put(platformID, platformResult);
+			}
 		}
 		// 插入数据库
 		Iterator<String> it = platformResults.keySet().iterator();

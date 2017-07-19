@@ -26,18 +26,18 @@ public class PayOrder extends AbstractLogModule {
 			JSONObject json = JSONObject.fromObject(log);
 			if (json != null) {
 				Map<String, String> jsonResult = new HashMap<String, String>();
-				for(String key :LOG_COLS){
+				for (String key : LOG_COLS) {
 					String value = json.getString(key);
 					jsonResult.put(key, value);
 				}
 				String platformID = hostMap.get(jsonResult.get("HostID"));
 				List<Map<String, String>> platformResult = platformResults.get(platformID);
-				if(platformResult == null){
-					platformResult = new ArrayList<Map<String, String>> ();
+				if (platformResult == null) {
+					platformResult = new ArrayList<Map<String, String>>();
 					platformResults.put(platformID, platformResult);
 				}
 				platformResult.add(jsonResult);
-				//再统计其他指标
+				// 再统计其他指标
 				compute5MinCash(hostMap, json, platform5MinResults); // 5分钟实时
 				computeUserPayStatics(hostMap, json, platformPayResults);// 个人充值总额
 			}
@@ -156,28 +156,30 @@ public class PayOrder extends AbstractLogModule {
 		Map<String, Map<String, Map<String, String>>> platformPayResults = new HashMap<String, Map<String, Map<String, String>>>();
 		Map<String, List<Map<String, String>>> platformResults = new HashMap<String, List<Map<String, String>>>();
 		Map<String, String> jsonResult = new HashMap<String, String>();
-		for(String key :LOG_COLS){
+		for (String key : LOG_COLS) {
 			String value = json.getString(key);
 			jsonResult.put(key, value);
 		}
 		String platformID = staticsHosts.get(jsonResult.get("HostID"));
 		List<Map<String, String>> platformResult = platformResults.get(platformID);
-		if(platformResult == null){
-			platformResult = new ArrayList<Map<String, String>> ();
+		if (platformResult == null) {
+			platformResult = new ArrayList<Map<String, String>>();
 			platformResults.put(platformID, platformResult);
 		}
-		platformResult.add(jsonResult);
-		//再统计其他指标
-		compute5MinCash(staticsHosts, json, platform5MinResults); // 5分钟实时
-		computeUserPayStatics(staticsHosts, json, platformPayResults);// 个人充值总额
-		PayDB payDB = new PayDB();
-		Iterator<String> it = platform5MinResults.keySet().iterator();
-		while (it.hasNext()) {
-			String tPlatformID = it.next();
-			Map<String, Map<String, String>> platform5MinResult = platform5MinResults.get(tPlatformID);
-			payDB.insert5Min(tPlatformID, platform5MinResult);
-			Map<String, Map<String, String>> platformPayResult = platformPayResults.get(tPlatformID);
-			payDB.insertUserPayStatics(tPlatformID, platformPayResult);
+		if (StringUtils.isNotBlank(jsonResult.get("Uid"))) { // uid不为空的才添加
+			platformResult.add(jsonResult);
+			// 再统计其他指标
+			compute5MinCash(staticsHosts, json, platform5MinResults); // 5分钟实时
+			computeUserPayStatics(staticsHosts, json, platformPayResults);// 个人充值总额
+			PayDB payDB = new PayDB();
+			Iterator<String> it = platform5MinResults.keySet().iterator();
+			while (it.hasNext()) {
+				String tPlatformID = it.next();
+				Map<String, Map<String, String>> platform5MinResult = platform5MinResults.get(tPlatformID);
+				payDB.insert5Min(tPlatformID, platform5MinResult);
+				Map<String, Map<String, String>> platformPayResult = platformPayResults.get(tPlatformID);
+				payDB.insertUserPayStatics(tPlatformID, platformPayResult);
+			}
 		}
 		return platformResults;
 	}

@@ -34,8 +34,8 @@ public class EndlessBattleLog extends AbstractLogModule {
 					map.put("Time", time);
 					for (String col : LOG_COLS) {
 						String value = RegUtils.getLogValue(message, col, "");
-						if(col.equals("Rewards") && value.length() > 100){
-							value = value.substring(0, 100); //截断字符串
+						if (col.equals("Rewards") && value.length() > 100) {
+							value = value.substring(0, 100); // 截断字符串
 						}
 						map.put(col, value);
 					}
@@ -76,8 +76,8 @@ public class EndlessBattleLog extends AbstractLogModule {
 			map.put("Time", time);
 			for (String col : LOG_COLS) {
 				String value = RegUtils.getLogValue(message, col, "");
-				if(col.equals("Rewards") && value.length() > 100){
-					value = value.substring(0, 100); //截断字符串
+				if (col.equals("Rewards") && value.length() > 100) {
+					value = value.substring(0, 100); // 截断字符串
 				}
 				map.put(col, value);
 			}
@@ -85,8 +85,10 @@ public class EndlessBattleLog extends AbstractLogModule {
 			List<Map<String, String>> platformResult = platformResults.get(platformID);
 			if (platformResult == null)
 				platformResult = new ArrayList<Map<String, String>>();
-			platformResult.add(map);
-			platformResults.put(platformID, platformResult);
+			if (StringUtils.isNotBlank(map.get("Uid"))) { // uid不为空的才添加
+				platformResult.add(map);
+				platformResults.put(platformID, platformResult);
+			}
 		}
 		// 插入数据库
 		Iterator<String> it = platformResults.keySet().iterator();

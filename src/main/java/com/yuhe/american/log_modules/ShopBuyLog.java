@@ -81,8 +81,10 @@ public class ShopBuyLog extends AbstractLogModule {
 			List<Map<String, String>> platformResult = platformResults.get(platformID);
 			if (platformResult == null)
 				platformResult = new ArrayList<Map<String, String>>();
-			platformResult.add(map);
-			platformResults.put(platformID, platformResult);
+			if (StringUtils.isNotBlank(map.get("Uid"))) { // uid不为空的才添加
+				platformResult.add(map);
+				platformResults.put(platformID, platformResult);
+			}
 		}
 		// 插入数据库
 		Iterator<String> it = platformResults.keySet().iterator();
